@@ -23,8 +23,7 @@ let mailOptions = {
 		from: 'tt175695@gmail.com', // sender address
 		to: '', // list of receivers
 		subject: 'Verification email from test system.', // Subject line
-		text: `Hello, please run this command to verify your email:\n
-					curl curl -X POST http://localhost:3000/egister`, // plain text body
+		text: `Hello, please run this command to verify your email:\ncurl -X POST http://localhost:3000/register`, // plain text body
 		// html: '<b>Hello world?</b>' // html body
 };
 

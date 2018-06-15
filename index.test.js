@@ -31,3 +31,9 @@ test('endpoint test | POST /account-registration | valid email address -> 200 OK
 		done()
 	}, 2000);
 });
+
+test('endpoint test | POST /account-registration | empty payload -> 400 Bad Request', async () => {
+	const res = await server.inject('/regiser')
+	expect(res.statusCode).toEqual(200)
+	expect(res.payload).toEqual("Registered")
+});
