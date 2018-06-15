@@ -58,20 +58,20 @@ server.route({
 
 			const id = uuidv4();
 			setupMail(request.payload['user-email'], id);
-			db.get('users')
-				.push({ 
-					name: request.payload['user-name'], 
-					email: request.payload['user-email'],
-					verified: 'registration-email-sent',
-					uuid: id
-				})
-				.write();
-
 			await transporter.sendMail(mailOptions, (error, info) => { // kinda slow
 				if (error) return console.error(error);
 
 				console.log('Message sent: %s', info.messageId);
 				// Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+				db.get('users')
+					.push({ 
+						name: request.payload['user-name'], 
+						email: request.payload['user-email'],
+						verified: 'registration-email-sent',
+						uuid: id
+					})
+					.write();
+
 			});
 
 			return 'Verification email sent';
@@ -97,10 +97,6 @@ const init = async () => {
 
     await server.start();
     console.log(`Server running at: ${server.info.uri}`);
-		console.log(email);
-
-		// Generate test SMTP service account from ethereal.email
-		// Only needed if you don't have a real mail account for testing
 };
 
 process.on('unhandledRejection', (err) => {

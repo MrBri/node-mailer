@@ -14,6 +14,7 @@
     "uuid": "^3.2.1"
   },
   "scripts": {
+		"start": "node index.js –logging_email log@xyz.com",
     "test": "jest",
     "test:w": "jest --watch"
   },
