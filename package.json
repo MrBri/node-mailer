@@ -9,10 +9,18 @@
   },
   "dependencies": {
     "hapi": "^17.5.1",
-    "nodemailer": "^4.6.7"
+    "lowdb": "^1.0.0",
+    "nodemailer": "^4.6.7",
+    "uuid": "^3.2.1"
   },
-	"scripts": {
-		"test": "jest",
-		"test:w": "jest --watch"
-	}
+  "scripts": {
+    "test": "jest",
+    "test:w": "jest --watch"
+  },
+  "jest": {
+    "watchPathIgnorePatterns": [
+      "<rootDir>/jest.json",
+      "<rootDir>/db.json"
+    ]
+  }
 }

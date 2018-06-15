@@ -32,8 +32,13 @@ test('endpoint test | POST /account-registration | valid email address -> 200 OK
 	}, 2000);
 });
 
-test('endpoint test | POST /account-registration | empty payload -> 400 Bad Request', async () => {
-	const res = await server.inject('/regiser')
+test('endpoint test | POST /register | valid response-> 200 OK', async (done) => {
+	const request  = Object.assign({}, requestDefaults, {
+		url: '/register',
+		payload: { uuid: 'b75dbc0e-144c-4558-be17-bed0f78021c1' } // id that was already generated
+  });
+	const res = await server.inject(request)
 	expect(res.statusCode).toEqual(200)
 	expect(res.payload).toEqual("Registered")
+	done()
 });

@@ -1,7 +1,12 @@
 'use strict';
-
+const low = require('lowdb') // testing is independent so using a file db
+const FileSync = require('lowdb/adapters/FileSync')
 const Hapi = require('hapi');
 const nodemailer = require('nodemailer');
+const uuidv4 = require('uuid/v4');
+
+const adapter = new FileSync('db.json')
+const db = low(adapter)
 // setup mailer
 nodemailer.createTestAccount((err, account) => {
 	// create reusable transporter object using the default SMTP transport
@@ -16,16 +21,23 @@ nodemailer.createTestAccount((err, account) => {
 	});
 	console.log('transporter started');
 });
+// Set some defaults (required if your JSON file is empty)
+db.defaults({ users: [] })
+  .write()
 
 let logEmail = 'log@xyz.com';
 let transporter // created transport for mailer
-let mailOptions = {
+let mailOptions;
+function setupMail(address, uuid) {
+	mailOptions = {
 		from: 'tt175695@gmail.com', // sender address
-		to: '', // list of receivers
+		to: address, // list of receivers
 		subject: 'Verification email from test system.', // Subject line
-		text: `Hello, please run this command to verify your email:\ncurl -X POST http://localhost:3000/register`, // plain text body
+		text: `Hello, please run this command to verify your email:\ncurl -X POST http://localhost:3000/register -d '{"uuid": "${uuid}"}' -H "Content-Type: application/json"`,
+		// plain text body
 		// html: '<b>Hello world?</b>' // html body
-};
+	};
+}
 
 if (process.argv[2] !== '–logging_email') {
 	console.warn(`Only argument is --logging_email, defaulting to ${logEmail}`);
@@ -34,8 +46,6 @@ if (process.argv[2] !== '–logging_email') {
 logEmail = process.argv[3] 
 
 // email validator
-
-
 const server = Hapi.server({
     port: 3000,
     host: 'localhost'
@@ -44,20 +54,43 @@ const server = Hapi.server({
 server.route({
     method: 'POST',
     path: '/account-registration',
-    handler: (request, h) => {
+    handler: async (request, h) => {
 
-			mailOptions.to = request.payload['user-email']
-			console.log('mailOptions: ', mailOptions);
+			const id = uuidv4();
+			setupMail(request.payload['user-email'], id);
+			db.get('users')
+				.push({ 
+					name: request.payload['user-name'], 
+					email: request.payload['user-email'],
+					verified: 'registration-email-sent',
+					uuid: id
+				})
+				.write();
 
-			transporter.sendMail(mailOptions, (error, info) => { // kinda slow
-					if (error) return console.log(error);
+			await transporter.sendMail(mailOptions, (error, info) => { // kinda slow
+				if (error) return console.error(error);
 
-					console.log('Message sent: %s', info.messageId);
-					// Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+				console.log('Message sent: %s', info.messageId);
+				// Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
 			});
 
 			return 'Verification email sent';
     }
+});
+
+server.route({
+	method: 'POST',
+	path: '/register',
+	handler: async (request, h) => {
+
+		const id = request.payload.uuid;
+		await db.get('posts')
+			.find({ uuid: id })
+			.assign({ verified: 'registered' })
+			.write()
+
+		return 'Registered';
+	}
 });
 
 const init = async () => {
